@@ -8,6 +8,7 @@ public class CarScript : MonoBehaviour
     [SerializeField] Rigidbody carPhysics;
     [SerializeField] Transform carVisual;
     [SerializeField] TMP_Text speedText;
+    [SerializeField] Transform cameraTransform; 
 
     private Vector3 velocity;
     public float speed;
@@ -24,7 +25,17 @@ public class CarScript : MonoBehaviour
 
     void FixedUpdate()
     {
-        Vector3 force = new Vector3(moveInput.x, 0, moveInput.y) * acceleration;
+        Vector3 camForward = cameraTransform.forward;
+        camForward.y = 0;
+        camForward.Normalize();
+
+        Vector3 camRight = cameraTransform.right;
+        camRight.y = 0;
+        camRight.Normalize();
+
+        Vector3 moveDir = camForward * moveInput.y + camRight * moveInput.x;
+
+        Vector3 force = moveDir * acceleration;
         carPhysics.AddForce(force, ForceMode.Force);
     }
 
@@ -41,14 +52,13 @@ public class CarScript : MonoBehaviour
             Vector3 flatVel = new Vector3(velocity.x, 0f, velocity.z);
             if (flatVel.sqrMagnitude > 0.01f)
             {
-                FaceSurface(); //chatgpt man
+                FaceSurface();
             }
-
         }
     }
+
     public void FaceSurface()
     {
-        // Check if grounded with a raycast
         if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, 0.4f))
         {
             Vector3 surfaceNormal = hit.normal;
@@ -68,7 +78,6 @@ public class CarScript : MonoBehaviour
         {
             if (velocity.sqrMagnitude > 0.001f)
             {
-                // Forward points along velocity, "up" points opposite to gravity
                 Vector3 forward = velocity.normalized;
                 Vector3 up = -Physics.gravity.normalized;
 
@@ -77,12 +86,9 @@ public class CarScript : MonoBehaviour
                 transform.rotation = Quaternion.Slerp(
                     transform.rotation,
                     targetRotation,
-                    Time.deltaTime * 2f // slower tilt for dramatic nosedive
+                    Time.deltaTime * 2f
                 );
             }
         }
     }
 }
-
-
-
